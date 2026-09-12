@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sughamo Devi</title>
+  <!-- Face-API.js bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <!-- Google Fonts: Coiny -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Coiny&display=swap" rel="stylesheet">
+  <!-- Event Classifier Module -->
+  <script type="module" src="./eventClassifier.js"></script>
+  <!-- Groq Commentary Module -->
+  <script type="module" src="./groqCommentary.js"></script>
+
+  <style>
+    :root {
+      /* Palette: Shades of Pastel Yellow and Cream */
+      --pastel-yellow: #ffee8c;
+      --pastel-yellow-light: #fffadb;
+      --pastel-yellow-bright: #ffe668;
+      --pastel-yellow-dim: rgba(255, 238, 140, 0.35);
+      --pastel-yellow-glow: rgba(255, 238, 140, 0.45);
+      
+      --cream-bg: #fffdec;
+      --cream-surface: #ffffff;
+      --cream-surface-soft: #fffdf6;
+      --cream-card: #ffffff;
+      
+      --card-border: #f0e3b6;
+      --card-border-subtle: #f8eed0;
+      --card-border-strong: #ebd17a;
+
+      --text: #ffbf00;
+      --text-muted: #ffbf00;
+      --text-light: #ffbf00;
+
+      --accent: #ffee8c;
+      --accent-hover: #ffe868;
+      --accent-text: #ffbf00;
+      --accent-gold: #ffbf00;
+
+      --bubble-bg: #fffdf2;
+      --bubble-border: #ffbf00;
+      --feed-item-bg: #ffffff;
+      --feed-item-border: #f3e6b5;
+
+      --shadow-sm: 0 2px 8px rgba(168, 137, 44, 0.07);
+      --shadow-md: 0 6px 20px rgba(168, 137, 44, 0.10);
+      --shadow-lg: 0 12px 32px rgba(168, 137, 44, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--cream-bg);
+      background-image: 
+        radial-gradient(circle at 15% 0%, rgba(255, 238, 140, 0.55) 0%, transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(255, 248, 204, 0.7) 0%, transparent 55%),
+        linear-gradient(180deg, #fffdec 0%, #fcf7e3 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 16px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      font-family: 'Coiny', cursive, sans-serif;
+      font-size: 2.35rem;
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      color: #ffbf00;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 10px rgba(255, 238, 140, 0.5);
+    }
+
+    p.subtitle {
+      color: #ffbf00;
+      font-size: 0.98rem;
+      font-weight: 600;
+      text-shadow: 0 1px 4px rgba(255, 238, 140, 0.4);
+    }
+
+    /* Controls Bar with Integrated TTS Toggle */
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    button, .file-label, .toggle-label {
+      background: #ffffff;
+      color: #ffbf00;
+      border: 1.5px solid #ffbf00;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    button:hover:not(:disabled), .file-label:hover, .toggle-label:hover {
+      background: #fffdf2;
+      border-color: #d4a017;
+      color: #ffbf00;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    button.primary {
+      background: #ffee8c;
+      border-color: #ffbf00;
+      color: #b38600;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(255, 238, 140, 0.5);
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: #fff3a8;
+      border-color: #ffbf00;
+      color: #996e00;
+      box-shadow: 0 6px 18px rgba(255, 238, 140, 0.65);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .toggle-label {
+      user-select: none;
+      padding: 9px 16px;
+    }
+
+    .toggle-label input {
+      accent-color: #ffbf00;
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
+
+    .status-badge {
+      font-size: 0.82rem;
+      font-weight: 750;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: #fffcee;
+      border: 1.5px solid #ffbf00;
+      color: #ffbf00;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-ready {
+      background: #fffcee;
+      color: #ffbf00;
+      border-color: #ffbf00;
+    }
+
+    .badge-generating {
+      background: #fffdf5;
+      color: #ffbf00;
+      border-color: #ffbf00;
+    }
+
+    .badge-no-key {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #f87171;
+    }
+
+    input[type="file"] { display: none; }
+
+    /* 2-Column Grid: Video on the Left, Panels on the Right */
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.25fr) minmax(340px, 1fr);
+      gap: 24px;
+      max-width: 1140px;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Column: Camera Stage Card */
+    .stage-card {
+      background: var(--cream-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stage-wrapper {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #11140e;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--card-border);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    #video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #image-preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Right Column: Sidebar Panels */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* 1. ACTIVE EMOTION IMAGE BOX (Fits inside, NOT scrollable, disappears on change) */
+    .emotion-image-card {
+      background: var(--cream-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* strictly non-scrollable */
+    }
+
+    .box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .box-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffbf00;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .emotion-badge-active {
+      font-size: 0.78rem;
+      font-weight: 750;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: #fffdf2;
+      color: #ffbf00;
+      border: 1.5px solid #ffbf00;
+      letter-spacing: 0.02em;
+    }
+
+    .image-viewport {
+      position: relative;
+      width: 100%;
+      height: 215px;
+      background: #fffdf6;
+      border: 1.5px solid #f0e3b6;
+      border-radius: 14px;
+      overflow: hidden; /* strictly prevents scrollbars */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      box-shadow: inset 0 2px 6px rgba(184, 155, 68, 0.06);
+    }
+
+    #activeEmotionImg {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain; /* perfectly contained */
+      border-radius: 10px;
+      display: none;
+      filter: drop-shadow(0 4px 10px rgba(184, 155, 68, 0.20));
+      animation: zoomFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes zoomFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .no-image-notice {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #ffbf00;
+      text-align: center;
+    }
+
+    .notice-emoji {
+      font-size: 3rem;
+      filter: drop-shadow(0 2px 6px rgba(184, 155, 68, 0.2));
+    }
+
+    .notice-text {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffbf00;
+    }
+
+    /* 2. SEPARATE LIVE RUNNING COMMENTARY CARD */
+    .commentary-card {
+      background: var(--cream-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      position: relative;
+      box-shadow: var(--shadow-md);
+    }
+
+    .commentary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .commentator-tag {
+      font-size: 0.85rem;
+      font-weight: 850;
+      color: #ffbf00;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .speech-bubble {
+      background: #fffdf2;
+      border: 2px solid #ffbf00;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 0.98rem;
+      line-height: 1.48;
+      color: #ffbf00;
+      font-weight: 600;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      position: relative;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 12px rgba(255, 191, 0, 0.15);
+    }
+
+    .speech-bubble.highlight {
+      border-color: #ffbf00;
+      background: #fff9d6;
+      box-shadow: 0 0 20px rgba(255, 191, 0, 0.35);
+    }
+
+    /* Separate Scrollable Commentary Feed (Text only, no image history) */
+    .commentary-feed {
+      margin-top: 14px;
+      height: 240px;
+      max-height: 280px;
+      overflow-y: auto; /* separate scrollable feed */
+      font-size: 0.86rem;
+      border-top: 1px solid var(--card-border-subtle);
+      padding-top: 12px;
+      padding-right: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      scrollbar-width: thin;
+      scrollbar-color: #ffbf00 #fffdf6;
+    }
+
+    .commentary-feed::-webkit-scrollbar {
+      width: 6px;
+    }
+    .commentary-feed::-webkit-scrollbar-track {
+      background: #fffdf6;
+      border-radius: 4px;
+    }
+    .commentary-feed::-webkit-scrollbar-thumb {
+      background: #ffbf00;
+      border-radius: 4px;
+    }
+
+    .feed-item {
+      background: #ffffff;
+      border: 1.5px solid #f3e6b5;
+      border-radius: 12px;
+      padding: 10px 14px;
+      line-height: 1.44;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s ease;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feed-item:hover {
+      background: #fffdf5;
+      border-color: #ffbf00;
+      transform: translateY(-1px);
+    }
+
+    .feed-item-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 0.76rem;
+    }
+
+    .feed-time {
+      margin-left: auto;
+      color: #ffbf00;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .feed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 750;
+      font-size: 0.74rem;
+      letter-spacing: 0.02em;
+      background: #fffcee;
+      border: 1.5px solid #ffbf00;
+      color: #ffbf00;
+    }
+
+    .feed-text {
+      color: #ffbf00;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    /* 3. Single Emotion Display Card */
+    .emotion-card {
+      background: var(--cream-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      text-align: center;
+      position: relative;
+      box-shadow: var(--shadow-md);
+    }
+
+    .emotion-header-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffbf00;
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+
+    .emotion-emoji {
+      font-size: 3.2rem;
+      line-height: 1;
+      margin-bottom: 4px;
+      filter: drop-shadow(0 2px 8px rgba(168, 137, 44, 0.15));
+    }
+
+    .emotion-name {
+      font-size: 1.45rem;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #ffbf00;
+      margin-bottom: 4px;
+    }
+
+    .emotion-hold-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fffdf2;
+      color: #ffbf00;
+      border: 1.5px solid #ffbf00;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 750;
+    }
+
+    .hold-progress-bar {
+      margin-top: 10px;
+      height: 6px;
+      background: #f5eed3;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .hold-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ffbf00, #ffee8c);
+      transition: width 0.1s linear;
+    }
+
+    /* 4. Calibration Drawer */
+    details.calibration-box {
+      background: var(--cream-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 12px 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    details.calibration-box summary {
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 750;
+      color: #ffbf00;
+      outline: none;
+    }
+
+    .calibration-content {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+
+    .calib-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .calib-row label { color: #ffbf00; flex: 1; font-weight: 600; }
+    .calib-row input {
+      width: 65px;
+      background: #ffffff;
+      border: 1.5px solid #f0dc7e;
+      color: #ffbf00;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-family: monospace;
+      text-align: right;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Sughamo Devi</h1>
+    <p class="subtitle">Live face emotion analysis with sports commentary</p>
+  </header>
+
+  <!-- CONTROLS & TTS TOGGLE (Cleaned up, removed .groq-bar) -->
+  <div class="controls">
+    <button id="webcamBtn" class="primary" disabled>Start Webcam</button>
+    <label class="file-label" id="uploadLabel">
+      Upload Image
+      <input type="file" id="imageInput" accept="image/*">
+    </label>
+    <button id="sampleImageBtn">Load Sample Face</button>
+    
+    <label class="toggle-label">
+      <input type="checkbox" id="voiceToggle" checked>
+      <span>🔊 Read Aloud (TTS)</span>
+    </label>
+
+    <div id="statusBadge" class="status-badge badge-generating">Loading Models...</div>
+  </div>
+
+  <div class="main-grid">
+    <!-- Camera Viewport (Left Side) -->
+    <div class="stage-card">
+      <div class="stage-wrapper" id="stageWrapper">
+        <video id="video" autoplay muted playsinline></video>
+        <img id="image-preview" alt="Preview" crossorigin="anonymous" />
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+
+    <!-- Sidebar (Right Side) -->
+    <div class="sidebar">
+
+      <!-- 1. ACTIVE EMOTION IMAGE BOX (Fits inside, NOT scrollable, disappears on change) -->
+      <div class="emotion-image-card" id="emotionImageCard">
+        <div class="box-header">
+          <span class="box-title">📸 ACTIVE EMOTION</span>
+          <span class="emotion-badge-active" id="activeEmotionBadge">😐 Neutral</span>
+        </div>
+        <div class="image-viewport" id="imageViewport">
+          <img id="activeEmotionImg" src="" alt="Active Emotion" />
+          <div id="noImageNotice" class="no-image-notice">
+            <span class="notice-emoji" id="noticeEmoji">😐</span>
+            <span class="notice-text" id="noticeText">Neutral Expression</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SEPARATE LIVE RUNNING COMMENTARY CARD -->
+      <div class="commentary-card">
+        <div class="commentary-header">
+          <div class="commentator-tag">🎙️ LIVE RUNNING COMMENTARY</div>
+        </div>
+
+        <div class="speech-bubble" id="speechBubble">
+          Waiting for camera feed... Keep neutral or switch emotions!
+        </div>
+
+        <!-- Separate Scrollable Commentary Feed (Text only, no image history) -->
+        <div class="commentary-feed" id="commentaryFeed">
+          <!-- Live running commentary items will scroll here -->
+        </div>
+      </div>
+
+      <!-- 3. DOMINANT EMOTION (7s AVG HOLD) -->
+      <div class="emotion-card">
+        <div class="emotion-header-label">Dominant Emotion (7s Stabilized)</div>
+        <div id="emotionEmoji" class="emotion-emoji">😐</div>
+        <div id="emotionName" class="emotion-name">Neutral</div>
+        <div class="emotion-hold-badge">
+          <span>Time Withheld:</span>
+          <strong id="heldSeconds" style="color: #ffbf00;">0.0s</strong>
+        </div>
+        <div class="hold-progress-bar">
+          <div id="holdProgressFill" class="hold-progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- 4. CALIBRATION & LIVE RATIOS DRAWER -->
+      <details class="calibration-box">
+        <summary>⚙️ Sensitivity & Calibration</summary>
+        <div class="calibration-content">
+          <div style="font-size: 0.76rem; color: #ffbf00; font-family: monospace;" id="liveRatioDisplay">
+            Live: Furrow: -- | Anger: -- | Smirk: -- | MAR: --
+          </div>
+          <div class="calib-row">
+            <label>Anger Score Threshold:</label>
+            <input type="number" id="th_angryScore" step="0.02" value="0.26">
+          </div>
+          <div class="calib-row">
+            <label>Brow Furrow Ratio:</label>
+            <input type="number" id="th_browFurrow" step="0.02" value="0.28">
+          </div>
+          <div class="calib-row">
+            <label>Debounce (ms):</label>
+            <input type="number" id="th_debounce" step="100" value="700">
+          </div>
+          <div class="calib-row">
+            <label>Stabilizer Hold (ms):</label>
+            <input type="number" id="th_holdTime" step="500" value="2500">
+          </div>
+          <button id="applyCalibrationBtn" class="primary" style="margin-top: 6px; width: 100%; justify-content: center; padding: 7px;">
+            Apply Settings
+          </button>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { FaceEventClassifier, SingleEmotionStabilizer } from './eventClassifier.js';
+    import { GroqCommentarySystem } from './groqCommentary.js';
+
+    const MODEL_BASE_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+    // UI Elements
+    const statusBadge = document.getElementById('statusBadge');
+    const voiceToggle = document.getElementById('voiceToggle');
+
+    const webcamBtn = document.getElementById('webcamBtn');
+    const imageInput = document.getElementById('imageInput');
+    const sampleImageBtn = document.getElementById('sampleImageBtn');
+    const video = document.getElementById('video');
+    const imagePreview = document.getElementById('image-preview');
+    const overlay = document.getElementById('overlay');
+
+    const speechBubble = document.getElementById('speechBubble');
+    const commentaryFeed = document.getElementById('commentaryFeed');
+
+    const emotionEmoji = document.getElementById('emotionEmoji');
+    const emotionName = document.getElementById('emotionName');
+    const heldSeconds = document.getElementById('heldSeconds');
+    const holdProgressFill = document.getElementById('holdProgressFill');
+
+    // Active Emotion Image Box Elements
+    const activeEmotionImg = document.getElementById('activeEmotionImg');
+    const noImageNotice = document.getElementById('noImageNotice');
+    const activeEmotionBadge = document.getElementById('activeEmotionBadge');
+    const noticeEmoji = document.getElementById('noticeEmoji');
+    const noticeText = document.getElementById('noticeText');
+
+    // Emotion to Image Mapping
+    const EMOTION_IMG_MAP = {
+      neutral: { file: 'neutral.jpeg', label: '😐 Neutral' },
+      happy: { file: 'happy.jpeg', label: '😊 Happy' },
+      sad: { file: 'sad.jpeg', label: '😢 Sad' },
+      disgust: { file: 'disgust.jpeg', label: '🤢 Disgust' },
+      disgusted: { file: 'disgust.jpeg', label: '🤢 Disgust' },
+      disbelief: { file: 'disbelief.jpeg', label: '😲 Disbelief' },
+      surprised: { file: 'disbelief.jpeg', label: '😲 Disbelief' },
+      anger: { file: 'anger.jpeg', label: '😠 Anger / Glare' },
+      angry: { file: 'anger.jpeg', label: '😠 Anger / Glare' },
+      smirk: { file: 'smirk.jpeg', label: '😏 Smirk' },
+      squint: { file: 'squint.jpeg', label: '😑 Squint' },
+      yawn: { file: 'yawn.jpeg', label: '🥱 Yawn' }
+    };
+
+    let currentDisplayedEmotion = null;
+    let isHoldingForCommentary = false;
+    let heldEmotion = null;
+    let currentLiveEmotion = 'neutral';
+
+    /**
+     * Updates the single active emotion image in the right-side box.
+     * When holding for commentary reading, calls without force are blocked.
+     * When speech ends, the image updates to the current emotion.
+     */
+    function updateActiveEmotionDisplay(rawEmotion, force = false) {
+      if (isHoldingForCommentary && !force) return;
+
+      const key = (rawEmotion || '').toLowerCase().trim();
+      if (key === currentDisplayedEmotion && !force) return;
+      currentDisplayedEmotion = key;
+
+      const match = EMOTION_IMG_MAP[key];
+
+      if (match) {
+        activeEmotionImg.src = `./emotions/${match.file}`;
+        activeEmotionImg.alt = match.label;
+        activeEmotionImg.style.display = 'block';
+        noImageNotice.style.display = 'none';
+        activeEmotionBadge.textContent = match.label;
+      } else {
+        // Fallback when an unmapped emotion occurs
+        activeEmotionImg.style.display = 'none';
+        activeEmotionImg.src = '';
+        noImageNotice.style.display = 'flex';
+        const isNeutral = key === 'neutral' || !key;
+        activeEmotionBadge.textContent = isNeutral ? '😐 Neutral' : key.toUpperCase();
+        noticeEmoji.textContent = isNeutral ? '😐' : '👀';
+        noticeText.textContent = isNeutral ? 'Neutral Expression' : 'Analyzing Expression...';
+      }
+    }
+
+    // Clean up any legacy localStorage key if present
+    localStorage.removeItem('groq_api_key');
+
+    // Instantiate Modules
+    const classifier = new FaceEventClassifier();
+    const stabilizer = new SingleEmotionStabilizer({ minHoldDurationMs: 3500 });
+
+    // Instantiate Groq Commentary System
+    const commentary = new GroqCommentarySystem({
+      enableVoice: true,
+      onCommentaryQueued: (event) => {
+        const emo = event?.emotion || event?.eventType;
+        if (emo) {
+          isHoldingForCommentary = true;
+          heldEmotion = emo;
+          updateActiveEmotionDisplay(emo, true);
+        }
+      },
+      onSpeechStart: (event) => {
+        const emo = event?.emotion || event?.eventType;
+        if (emo) {
+          isHoldingForCommentary = true;
+          heldEmotion = emo;
+          updateActiveEmotionDisplay(emo, true);
+        }
+      },
+      onSpeechEnd: () => {
+        isHoldingForCommentary = false;
+        heldEmotion = null;
+        updateActiveEmotionDisplay(currentLiveEmotion, true);
+      },
+      onCommentary: (text, event) => {
+        speechBubble.textContent = text;
+        speechBubble.classList.add('highlight');
+        setTimeout(() => speechBubble.classList.remove('highlight'), 1200);
+
+        // Append text-only to scrollable feed (NO image history kept)
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+        const timeStr = new Date().toLocaleTimeString();
+
+        let badgeClass = 'badge-neutral';
+        let badgeLabel = '😐 Neutral';
+
+        if (event.trigger === 'discrete_event') {
+          const meta = {
+            happy: { class: 'badge-happy', label: '😊 Happy' },
+            sad: { class: 'badge-sad', label: '😢 Sad' },
+            disgust: { class: 'badge-disgust', label: '🤢 Disgust' },
+            disbelief: { class: 'badge-disbelief', label: '😲 Disbelief' },
+            anger: { class: 'badge-anger', label: '😠 Anger / Glare' },
+            eyebrow_raise: { class: 'badge-eyebrow_raise', label: '🤨 Eyebrows' },
+            smirk: { class: 'badge-smirk', label: '😏 Smirk' },
+            squint: { class: 'badge-squint', label: '😑 Squint' },
+            yawn: { class: 'badge-yawn', label: '🥱 Yawn' }
+          };
+          const m = meta[event.eventType] || { class: 'badge-neutral', label: event.eventType };
+          badgeClass = m.class;
+          badgeLabel = m.label;
+        } else if (event.trigger === 'neutral_persisted_5s' || event.trigger === 'neutral_prolonged') {
+          badgeClass = 'badge-neutral';
+          badgeLabel = `😐 Neutral (${event.timeWithheldSec}s)`;
+        } else {
+          const emo = (event.emotion || '').toLowerCase();
+          const emos = {
+            happy: '😊 Happy',
+            sad: '😢 Sad',
+            disgusted: '🤢 Disgust',
+            surprised: '😲 Surprised',
+            fearful: '😨 Fear',
+            angry: '😠 Anger'
+          };
+          badgeClass = `badge-${emo}` in { 'badge-happy': 1, 'badge-sad': 1, 'badge-disgust': 1, 'badge-anger': 1 } ? `badge-${emo}` : 'badge-neutral';
+          badgeLabel = emos[emo] || emo.toUpperCase();
+        }
+
+        item.innerHTML = `
+          <div class="feed-item-header">
+            <span class="feed-badge ${badgeClass}">${badgeLabel}</span>
+            <span class="feed-time">${timeStr}</span>
+          </div>
+          <div class="feed-text">"${text}"</div>
+        `;
+        commentaryFeed.prepend(item);
+
+        console.log(`%c[GROQ COMMENTARY]`, 'color: #b3860b; font-weight: bold;', {
+          text,
+          trigger: event.trigger,
+          emotion: event.emotion || event.eventType,
+          timeWithheld: event.timeWithheldSec || event.prevTimeWithheldSec
+        });
+      },
+      onError: (err) => {
+        if (err && err.includes('.env')) {
+          speechBubble.textContent = `⚠️ Please paste your GROQ_API_KEY into the .env file.`;
+        } else {
+          console.warn('[Commentary Error]', err);
+        }
+      }
+    });
+
+    // Voice toggle
+    voiceToggle.addEventListener('change', (e) => {
+      commentary.setVoice(e.target.checked);
+    });
+
+    let isModelsLoaded = false;
+    let isVideoRunning = false;
+    let detectInterval = null;
+
+    // Load Face-API models
+    async function loadModels() {
+      try {
+        statusBadge.textContent = 'Loading Models...';
+        statusBadge.className = 'status-badge badge-generating';
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_BASE_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_BASE_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_BASE_URL);
+
+        isModelsLoaded = true;
+        statusBadge.textContent = 'Models Ready';
+        statusBadge.className = 'status-badge badge-ready';
+        webcamBtn.disabled = false;
+        console.log('%c[Face-API] Ready!', 'color: #15803d; font-weight: bold;');
+      } catch (err) {
+        console.error('Model loading failed:', err);
+        statusBadge.textContent = 'Model Error';
+        statusBadge.className = 'status-badge badge-no-key';
+      }
+    }
+
+    // Process frame detections
+    function processDetections(detections, displayWidth, displayHeight) {
+      const now = performance.now();
+      const ctx = overlay.getContext('2d');
+      overlay.width = displayWidth;
+      overlay.height = displayHeight;
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+
+      if (!detections || detections.length === 0) {
+        currentLiveEmotion = 'neutral';
+        updateActiveEmotionDisplay('neutral');
+        return;
+      }
+
+      // Draw bounding box
+      const resized = faceapi.resizeResults(detections, { width: displayWidth, height: displayHeight });
+      faceapi.draw.drawDetections(overlay, resized);
+
+      // Primary face
+      const primary = detections[0];
+      const expressions = primary.expressions;
+      const landmarks = primary.landmarks;
+
+      // 1. Single Emotion Stabilizer
+      const stableEmotion = stabilizer.update(expressions, now);
+      emotionEmoji.textContent = stableEmotion.emoji;
+      emotionName.textContent = stableEmotion.emotion;
+      heldSeconds.textContent = `${stableEmotion.heldSeconds}s`;
+
+      const cyclePct = Math.min(100, (stableEmotion.durationMs / stabilizer.minHoldDurationMs) * 100);
+      holdProgressFill.style.width = `${cyclePct}%`;
+
+      // 2. Groq Commentary Queue Tick
+      commentary.tick(stableEmotion.emotion, now, stableEmotion.score);
+
+      // 3. Discrete Event Classifier (eyebrow raise, anger scowl, smirk, squint, yawn, big smile)
+      const event = classifier.processFrame(expressions, landmarks, now);
+      if (event && event.type !== 'neutral_long') {
+        currentLiveEmotion = event.type;
+        commentary.enqueueDiscreteEvent(event, now);
+        // Active image updates to discrete event (blocked if holding for speech)
+        updateActiveEmotionDisplay(event.type);
+      } else {
+        currentLiveEmotion = stableEmotion.emotion;
+        // Active image updates to stable emotion (blocked if holding for speech)
+        updateActiveEmotionDisplay(stableEmotion.emotion);
+      }
+
+      // 4. Update live calibration readouts
+      const ratios = classifier.getRatios(landmarks);
+      const angerScore = ((expressions.angry || 0) * 100).toFixed(0);
+      const liveRatioDisplay = document.getElementById('liveRatioDisplay');
+      if (liveRatioDisplay) {
+        liveRatioDisplay.textContent = `Live: Furrow: ${ratios.browFurrowRatio} | Anger: ${angerScore}% | Smirk: ${ratios.smirkAsymmetry} | MAR: ${ratios.mar}`;
+      }
+    }
+
+    // Toggle webcam
+    async function toggleWebcam() {
+      if (!isModelsLoaded) return;
+
+      if (isVideoRunning) {
+        if (detectInterval) clearInterval(detectInterval);
+        if (video.srcObject) {
+          video.srcObject.getTracks().forEach(t => t.stop());
+          video.srcObject = null;
+        }
+        isVideoRunning = false;
+        isHoldingForCommentary = false;
+        heldEmotion = null;
+        currentLiveEmotion = 'neutral';
+        if (commentary) {
+          commentary.setVoice(false);
+          commentary.setVoice(voiceToggle.checked);
+        }
+        webcamBtn.textContent = 'Start Webcam';
+        webcamBtn.classList.add('primary');
+        const ctx = overlay.getContext('2d');
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        updateActiveEmotionDisplay('neutral', true);
+        return;
+      }
+
+      try {
+        imagePreview.style.display = 'none';
+        video.style.display = 'block';
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+        video.srcObject = stream;
+        await video.play();
+
+        isVideoRunning = true;
+        webcamBtn.textContent = 'Stop Webcam';
+        webcamBtn.classList.remove('primary');
+
+        detectInterval = setInterval(async () => {
+          if (!video.paused && !video.ended && isVideoRunning) {
+            const detections = await faceapi
+              .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+              .withFaceLandmarks()
+              .withFaceExpressions();
+
+            const rect = video.getBoundingClientRect();
+            processDetections(detections, rect.width, rect.height);
+          }
+        }, 120);
+
+      } catch (err) {
+        console.error('Camera error:', err);
+        alert('Could not access webcam: ' + err.message);
+      }
+    }
+
+    // Static image testing
+    async function runOnImage(imgEl) {
+      if (!isModelsLoaded) return;
+      if (isVideoRunning) toggleWebcam();
+
+      isHoldingForCommentary = false;
+      heldEmotion = null;
+
+      video.style.display = 'none';
+      imagePreview.style.display = 'block';
+
+      const detections = await faceapi
+        .detectAllFaces(imgEl, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceExpressions();
+
+      const rect = imgEl.getBoundingClientRect();
+      processDetections(detections, rect.width, rect.height);
+    }
+
+    webcamBtn.addEventListener('click', toggleWebcam);
+
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        imagePreview.src = ev.target.result;
+        imagePreview.onload = () => runOnImage(imagePreview);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    sampleImageBtn.addEventListener('click', () => {
+      imagePreview.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=640&q=80';
+      imagePreview.onload = () => runOnImage(imagePreview);
+    });
+
+    const applyCalibrationBtn = document.getElementById('applyCalibrationBtn');
+    if (applyCalibrationBtn) {
+      applyCalibrationBtn.addEventListener('click', () => {
+        const anger = parseFloat(document.getElementById('th_angryScore').value) || 0.26;
+        const furrow = parseFloat(document.getElementById('th_browFurrow').value) || 0.28;
+        const debounce = parseInt(document.getElementById('th_debounce').value, 10) || 700;
+        const holdTime = parseInt(document.getElementById('th_holdTime').value, 10) || 2500;
+
+        classifier.updateConfig({
+          thresholds: {
+            angryScore: anger,
+            browFurrowRatio: furrow,
+          },
+          cooldowns: {
+            globalCooldownMs: debounce,
+            sameEventCooldownMs: debounce * 4,
+          }
+        });
+        stabilizer.minHoldDurationMs = holdTime;
+
+        alert(`Updated! Anger: ${anger}, Furrow: ${furrow}, Debounce: ${debounce}ms, Hold: ${holdTime}ms`);
+        console.log('[Calibration Updated]', classifier.config);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadModels();
+      updateActiveEmotionDisplay('neutral', true);
+    });
+  </script>
+</body>
+</html>
