@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Minimal Face Expression Logger</title>
+  <!-- Load face-api.js bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+</head>
+<body>
+  <h1>Face Expression Detection (Check Console)</h1>
+  <p>Open Developer Tools (Press F12 -> Console tab) to see the printed expression scores.</p>
+  <video id="video" width="640" height="480" autoplay muted playsinline style="background: #000;"></video>
+
+  <script>
+    async function init() {
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      console.log('Loading face-api models...');
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+      console.log('Models loaded successfully.');
+
+      const video = document.getElementById('video');
+      video.srcObject = await navigator.mediaDevices.getUserMedia({ video: {} });
+
+      video.addEventListener('play', () => {
+        setInterval(async () => {
+          const detections = await faceapi
+            .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceExpressions();
+
+          if (detections && detections.length > 0) {
+            detections.forEach((det, idx) => {
+              console.log(`[Face #${idx + 1}] Expression scores:`, det.expressions);
+            });
+          }
+        }, 200);
+      });
+    }
+
+    init().catch(err => console.error('Initialization error:', err));
+  </script>
+</body>
+</html>
