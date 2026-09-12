@@ -1,1 +1,2 @@
-# No external pip dependencies required as this project uses standard python libraries for the backend
+Flask==3.0.0
+Werkzeug==3.0.0
